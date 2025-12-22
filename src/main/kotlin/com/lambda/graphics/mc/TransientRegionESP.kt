@@ -20,6 +20,7 @@ package com.lambda.graphics.mc
 import com.lambda.graphics.esp.RegionESP
 import com.lambda.graphics.esp.ShapeScope
 import com.mojang.blaze3d.systems.RenderSystem
+import kotlinx.coroutines.sync.Mutex
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.floor
 
@@ -29,6 +30,8 @@ import kotlin.math.floor
  */
 class TransientRegionESP(name: String, depthTest: Boolean = false) : RegionESP(name, depthTest) {
 	private val builders = ConcurrentHashMap<Long, ShapeScope>()
+
+	val buildersMutex = Mutex()
 
 	/** Get or create a builder for a specific region. */
 	override fun shapes(x: Double, y: Double, z: Double, block: ShapeScope.() -> Unit) {
@@ -45,8 +48,10 @@ class TransientRegionESP(name: String, depthTest: Boolean = false) : RegionESP(n
 	}
 
 	/** Clear all current builders. Call this at the end of every tick. */
-	override fun clear() {
+	override suspend fun clear() {
+		buildersMutex.lock()
 		builders.clear()
+		buildersMutex.unlock()
 	}
 
 	/** Upload collected geometry to GPU. Must be called on main thread. */
@@ -54,6 +59,9 @@ class TransientRegionESP(name: String, depthTest: Boolean = false) : RegionESP(n
 		// if we don't assert this someone could try to accidentally upload from a non render thread
 		// and lose their mind debugging that.
 		RenderSystem.assertOnRenderThread()
+		if (!buildersMutex.tryLock()) {
+			return
+		}
 		val activeKeys = builders.keys().asSequence().toSet()
 
 		builders.forEach { (key, scope) ->
@@ -66,5 +74,6 @@ class TransientRegionESP(name: String, depthTest: Boolean = false) : RegionESP(n
 				renderer.clearData()
 			}
 		}
+		buildersMutex.unlock()
 	}
 }

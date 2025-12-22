@@ -56,7 +56,7 @@ class InterpolatedRegionESP(name: String, depthTest: Boolean = false) : RegionES
 		scope.apply(block)
 	}
 
-	override fun clear() {
+	override suspend fun clear() {
 		prevBuilders.clear()
 		currBuilders.clear()
 		interpolatedCollectors.clear()

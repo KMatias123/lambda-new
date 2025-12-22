@@ -81,7 +81,7 @@ class ChunkedRegionESP(
 		}
 	}
 
-	override fun clear() {
+	override suspend fun clear() {
 		chunkMap.values.forEach { it.close() }
 		chunkMap.clear()
 		rebuildQueue.clear()
