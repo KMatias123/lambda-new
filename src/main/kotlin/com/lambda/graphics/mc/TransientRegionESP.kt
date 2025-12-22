@@ -19,6 +19,7 @@ package com.lambda.graphics.mc
 
 import com.lambda.graphics.esp.RegionESP
 import com.lambda.graphics.esp.ShapeScope
+import com.mojang.blaze3d.systems.RenderSystem
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.floor
 
@@ -50,6 +51,9 @@ class TransientRegionESP(name: String, depthTest: Boolean = false) : RegionESP(n
 
 	/** Upload collected geometry to GPU. Must be called on main thread. */
 	override fun upload() {
+		// if we don't assert this someone could try to accidentally upload from a non render thread
+		// and lose their mind debugging that.
+		RenderSystem.assertOnRenderThread()
 		val activeKeys = builders.keys().asSequence().toSet()
 
 		builders.forEach { (key, scope) ->

@@ -18,6 +18,7 @@
 package com.lambda.graphics.esp
 
 import com.lambda.Lambda.mc
+import com.lambda.graphics.RenderMain
 import com.lambda.graphics.mc.LambdaRenderPipelines
 import com.lambda.graphics.mc.RegionRenderer
 import com.lambda.graphics.mc.RenderRegion
@@ -56,13 +57,14 @@ abstract class RegionESP(val name: String, val depthTest: Boolean) {
      * @param tickDelta Progress within current tick (used for interpolation)
      */
     open fun render(tickDelta: Float = mc.tickDelta) {
+        RenderSystem.assertOnRenderThread()
         val camera = mc.gameRenderer?.camera ?: return
         val cameraPos = camera.pos
 
         val activeRenderers = renderers.values.filter { it.hasData() }
         if (activeRenderers.isEmpty()) return
 
-        val modelViewMatrix = com.lambda.graphics.RenderMain.modelViewMatrix
+        val modelViewMatrix = RenderMain.modelViewMatrix
         val transforms = activeRenderers.map { renderer ->
             val offset = renderer.region.computeCameraRelativeOffset(cameraPos)
             val modelView = Matrix4f(modelViewMatrix).translate(offset)
