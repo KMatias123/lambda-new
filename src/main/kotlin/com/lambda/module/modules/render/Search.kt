@@ -126,8 +126,8 @@ object Search : Module(
 		    val fillColor = Color(lineColor.red, lineColor.green, lineColor.blue, (naturalColorAlpha * 255).toInt())
 		    val shape = state.getOutlineShape(world, pos)
 		    val boxes =
-			    if (shape.isEmpty) listOf(Box(pos))
-			    else shape.boundingBoxes.map { it.offset(pos) }
+			    if (shape.isEmpty) setOf(Box(pos))
+			    else shape.boundingBoxes.map { it.offset(pos) }.toSet()
 		    if (tracers) {
 			    val center = shape
 				    .boundingBoxes
@@ -152,7 +152,7 @@ object Search : Module(
 					if (entity.entityGroup.nameToDisplayNameMap[entity::class.simpleName] in entities) {
 						val entityColor = getEntityColor(entity)
 						box(
-							listOf(entity.interpolatedBox),
+							setOf(entity.interpolatedBox),
 							DirectionMask.NONE,
 							if (useNaturalColor) entityColor.setAlpha(naturalColorAlpha) else entityFillColor,
 							if (useNaturalColor) entityColor else entityOutlineColor
@@ -179,7 +179,7 @@ object Search : Module(
 		)
 	}
 
-	private fun RenderBuilder.box(boxes: List<Box>, ignoreSides: Int, fillColor: Color, lineColor: Color) {
+	private fun RenderBuilder.box(boxes: Set<Box>, ignoreSides: Int, fillColor: Color, lineColor: Color) {
 		boxes.forEach { box ->
 			box(box, outlineConfig) {
 				hideSides(ignoreSides)
